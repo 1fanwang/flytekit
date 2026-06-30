@@ -2047,9 +2047,8 @@ def test_union_custom_transformer_sanity_check():
     assert union_type_tags_unique(lt)
 
     ctx = FlyteContextManager.current_context()
-    # int and UnsignedInt both accept 3, but int is the value's exact type, so it wins without ambiguity.
-    lv = TypeEngine.to_literal(ctx, 3, pt, lt)
-    assert lv.scalar.union.stored_type.structure.tag == "int"
+    with pytest.raises(TypeError, match="Ambiguous choice of variant for union type"):
+        TypeEngine.to_literal(ctx, 3, pt, lt)
 
     del TypeEngine._REGISTRY[UnsignedInt]
 

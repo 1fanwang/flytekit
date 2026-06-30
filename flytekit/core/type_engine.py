@@ -2097,9 +2097,9 @@ class UnionTransformer(AsyncTypeTransformer[T]):
             raise TypeTransformerFailedError(f"Cannot convert from {python_val} to {python_type}")
 
         if len(matches) > 1:
-            # More than one variant matched. Prefer the one whose type is exactly the value's type -- e.g. for
-            # Union[str, Color] and "red", both str and Color (which accepts a matching string) match, but str wins.
-            exact = [m for m in matches if type(python_val) is m[0]]
+            # A bare string matches both `str` and an enum whose values include it -- prefer `str` (the exact type).
+            # Every other multi-variant match stays ambiguous: structurally-identical variants are a read-back hazard.
+            exact = [m for m in matches if m[0] is str] if type(python_val) is str else []
             if len(exact) != 1:
                 raise TypeError(
                     "Ambiguous choice of variant for union type.\n"
