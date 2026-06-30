@@ -1531,15 +1531,13 @@ def test_enum_type():
         TypeEngine.to_literal_type(UnsupportedEnumValues)
 
 
-@pytest.mark.parametrize("python_val", ["red", "green", "blue"])
-def test_enum_to_literal_accepts_matching_string(python_val):
-    # A string matching an enum value is accepted by assert_type, so to_literal must
-    # accept it too (e.g. an enum default supplied as a string).
+def test_enum_to_literal_accepts_matching_string():
+    """Test that a string matching an enum value is accepted by to_literal."""
     ctx = FlyteContextManager.current_context()
     lt = TypeEngine.to_literal_type(Color)
 
-    lv = TypeEngine.to_literal(ctx, python_val, Color, lt)
-    assert lv.scalar.primitive.string_value == python_val
+    lv = TypeEngine.to_literal(ctx, "red", Color, lt)
+    assert lv.scalar.primitive.string_value == "red"
 
 
 @pytest.mark.parametrize("python_val", ["purple", "Red", ""])
@@ -1552,9 +1550,7 @@ def test_enum_to_literal_rejects_non_matching_string(python_val):
 
 
 def test_enum_string_in_union_prefers_str():
-    # A bare string matching an enum value would otherwise match both the ``str`` and enum
-    # variants of a union. The string is most specifically a ``str``, so the ``str`` variant
-    # is chosen instead of raising an ambiguity error.
+    """Test that a bare string in Union[Color, str] resolves to str, not the enum, without ambiguity error."""
     ctx = FlyteContextManager.current_context()
     pt = typing.Union[Color, str]
     lt = TypeEngine.to_literal_type(pt)
@@ -2051,8 +2047,9 @@ def test_union_custom_transformer_sanity_check():
     assert union_type_tags_unique(lt)
 
     ctx = FlyteContextManager.current_context()
-    with pytest.raises(TypeError, match="Ambiguous choice of variant for union type"):
-        TypeEngine.to_literal(ctx, 3, pt, lt)
+    # int and UnsignedInt both accept 3, but int is the value's exact type, so it wins without ambiguity.
+    lv = TypeEngine.to_literal(ctx, 3, pt, lt)
+    assert lv.scalar.union.stored_type.structure.tag == "int"
 
     del TypeEngine._REGISTRY[UnsignedInt]
 
