@@ -1081,8 +1081,7 @@ class EnumTransformer(TypeTransformer[enum.Enum]):
     def to_literal(
         self, ctx: FlyteContext, python_val: Union[enum.Enum, str], python_type: Type[T], expected: LiteralType
     ) -> Literal:
-        # Accept a raw string matching one of the enum's values: assert_type already allows it (e.g. an enum
-        # default supplied as a string), so to_literal must too, else such a value type-checks but fails to serialize.
+        # Accept either an enum member or a raw string matching one of its values.
         val = python_val.value if isinstance(python_val, enum.Enum) else python_val
         if not isinstance(val, str):
             raise TypeTransformerFailedError(f"Expected an enum or matching string, got {type(python_val)}")
