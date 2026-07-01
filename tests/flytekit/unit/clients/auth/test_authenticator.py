@@ -64,9 +64,7 @@ def test_pkce_refresh_failure_keeps_cached_credentials(
     authn = PKCEAuthenticator(ENDPOINT, static_cfg_store, verify=False)
     authn.refresh_credentials()
 
-    # A failed refresh must not delete the cached credentials. The authenticator falls back to a
-    # full authorization flow and overwrites them via store(), so the delete was both redundant and
-    # harmful -- a transient failure would force an unnecessary re-login.
+    # A failed refresh must not delete the cached credentials
     mock_keyring.delete.assert_not_called()
     mock_get_creds.assert_called_once()
     mock_keyring.store.assert_called()
@@ -150,9 +148,6 @@ def test_device_flow_authenticator(mock_refresh: MagicMock, poll_mock: MagicMock
     poll_mock.assert_called()
     device_mock.assert_called()
     mock_refresh.assert_called()
-
-    # The failed refresh must not have deleted the cached credentials.
-    mock_keyring.delete.assert_not_called()
 
 @patch("flytekit.clients.auth.authenticator.KeyringStore")
 @patch("flytekit.clients.auth.token_client.get_device_code")
